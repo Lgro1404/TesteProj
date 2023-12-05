@@ -48,6 +48,7 @@ TIM_HandleTypeDef htim1;
 uint32_t valsubida = 0;
 uint32_t valdescida = 0;
 uint16_t distance  = 0;
+int16_t xacc = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +98,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-  HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c1, 0b11010000, 1, 100);
+  HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c1, 0b11010001, 1, 100);
+  ret = HAL_I2C_Mem_Write(&hi2c1, 0b11010000, 28, 1, 0, 1, 100);
+  ret = HAL_I2C_Mem_Write(&hi2c1, 0b11010000, 107, 1, 0b00001000, 1, 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,6 +116,9 @@ int main(void)
 	  while ((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9)));
 	  valdescida = __HAL_TIM_GET_COUNTER (&htim1);
 	  distance = (valdescida-valsubida)* 0.034/2;
+	  uint8_t xvect[2];
+	  HAL_I2C_Mem_Read(&hi2c1, 0b11010001, 59, 1, xvect, 2, 100);
+	  xacc = xvect[0] << 8 + xvect[1];
 	  if(distance <= 30){
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 	  }
