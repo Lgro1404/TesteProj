@@ -47,6 +47,9 @@ TIM_HandleTypeDef htim1;
 uint32_t valsubida = 0;
 uint32_t valdescida = 0;
 uint16_t distance  = 0;
+int16_t Accel_X_RAW = 0;
+int16_t Accel_Y_RAW = 0;
+int16_t Accel_Z_RAW = 0;
 //int16_t xacc = 0;
 /* USER CODE END PV */
 
@@ -61,7 +64,55 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define MPU6050_ADDR 0xD0
+#define SMPLRT_DIV_REG 0x19
+#define ACCEL_CONFIG_REG 0x1C
+#define ACCEL_XOUT_H_REG 0x3B
+#define PWR_MGMT_1_REG 0x6B
+#define WHO_AM_I_REG 0x75
+void MPU6050_Init (void)
+{
+	uint8_t check;
+	uint8_t Data;
+	HAL_I2C_Mem_Read (&hi2c1, MPU6050_ADDR,WHO_AM_I_REG,1, &check, 1, 1000);
 
+	if (check == 104)
+	{
+		// power management register 0X6B we should write all 0's to wake the sensor up
+		Data = 0;
+		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, PWR_MGMT_1_REG, 1,&Data, 1, 1000);
+
+		// Set DATA RATE of 1KHz by writing SMPLRT_DIV register
+		Data = 0x07;
+		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, SMPLRT_DIV_REG, 1, &Data, 1, 1000);
+		Data = 0x00;
+		HAL_I2C_Mem_Write(&hi2c1, MPU6050_ADDR, ACCEL_CONFIG_REG, 1, &Data, 1, 1000);
+	}
+
+}
+
+
+void MPU6050_Read_Accel (void)
+{
+	uint8_t Rec_Data[6];
+
+	// Read 6 BYTES of data starting from ACCEL_XOUT_H register
+
+	HAL_I2C_Mem_Read (&hi2c1, MPU6050_ADDR, ACCEL_XOUT_H_REG, 1, Rec_Data, 6, 1000);
+
+	Accel_X_RAW = (int16_t)(Rec_Data[0] << 8 | Rec_Data [1]);
+	Accel_Y_RAW = (int16_t)(Rec_Data[2] << 8 | Rec_Data [3]);
+	Accel_Z_RAW = (int16_t)(Rec_Data[4] << 8 | Rec_Data [5]);
+
+	/*** convert the RAW values into acceleration in 'g'
+	     we have to divide according to the Full scale value set in FS_SEL
+	     I have configured FS_SEL = 0. So I am dividing by 16384.0
+	     for more details check ACCEL_CONFIG Register              ****/
+
+	Ax = Accel_X_RAW/16384.0;
+	Ay = Accel_Y_RAW/16384.0;
+	Az = Accel_Z_RAW/16384.0;
+}
 /* USER CODE END 0 */
 
 /**
@@ -97,18 +148,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim1);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-  HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c1, 0b11010001, 1, 100);
-  ret = HAL_I2C_Mem_Write(&hi2c1, 0b11010000, 28, 1, 0b10000000, 1, 100);
-  ret = HAL_I2C_Mem_Write(&hi2c1, 0b11010000, 107, 1, 8, 1, 100);
+  MPU6050_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  uint8_t xvect[2];
-	  ret = HAL_I2C_Mem_Read(&hi2c1, 0b11010001, 59, 1, xvect, 2, 100);
-	  int16_t xacc = xvect[0] << 8 + xvect[1];
+	  MPU6050_Read_Accel();
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  while (__HAL_TIM_GET_COUNTER (&htim1) < 10);  // wait for 10 us

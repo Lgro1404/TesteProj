@@ -60,8 +60,8 @@ all: main-build
 main-build: TesteProj.elf secondary-outputs
 
 # Tool invocations
-TesteProj.elf TesteProj.map: $(OBJS) $(USER_OBJS) /home/clube-do-hardware/STM32CubeIDE/workspace_1.14.0/TesteProj/STM32F070F6PX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "TesteProj.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/clube-do-hardware/STM32CubeIDE/workspace_1.14.0/TesteProj/STM32F070F6PX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TesteProj.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+TesteProj.elf TesteProj.map: $(OBJS) $(USER_OBJS) C:\Users\Pet\ Eng\ Comp\STM32CubeIDE\workspace_1.13.2\TesteProj\STM32F070F6PX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "TesteProj.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"C:\Users\Pet Eng Comp\STM32CubeIDE\workspace_1.13.2\TesteProj\STM32F070F6PX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TesteProj.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
