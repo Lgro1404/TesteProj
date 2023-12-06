@@ -50,6 +50,7 @@ uint16_t distance  = 0;
 int16_t Accel_X_RAW = 0;
 int16_t Accel_Y_RAW = 0;
 int16_t Accel_Z_RAW = 0;
+float Ax,Ay,Az;
 //int16_t xacc = 0;
 /* USER CODE END PV */
 
@@ -155,7 +156,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  MPU6050_Read_Accel();
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  while (__HAL_TIM_GET_COUNTER (&htim1) < 10);  // wait for 10 us
@@ -165,7 +165,8 @@ int main(void)
 	  while ((HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9)));
 	  valdescida = __HAL_TIM_GET_COUNTER (&htim1);
 	  distance = (valdescida-valsubida)* 0.034/2;
-	  if(distance <= 30){
+	  MPU6050_Read_Accel();
+	  if(distance <= 30 + Ax*100){
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 	  }
 	  else{
